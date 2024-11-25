@@ -11,6 +11,10 @@ This repository helps you deploy a kubernetes cluster locally using [k3s](https:
 
 ## How to
 
+### Install traefik
+
+First, install traefik stack from this repository https://bitbucket.org/op-connect/traefik
+
 ### Clone the project
 ```shell
 git clone git@bitbucket.org:op-connect/k3s.git
