@@ -1,0 +1,60 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    globalArguments:
+      - "--serversTransport.insecureSkipVerify=true"
+      - "--api"
+      - "--api.insecure=true"
+    providers:
+      kubernetesCRD:
+        allowCrossNamespace: true
+    dashboard:
+      enabled: true
+    logs:
+      access:
+        enabled: true
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik-dashboard
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/instance: traefik
+    app.kubernetes.io/name: traefik-dashboard
+spec:
+  type: ClusterIP
+  ports:
+    - name: traefik
+      port: 9000
+      targetPort: traefik
+      protocol: TCP
+  selector:
+    app.kubernetes.io/instance: traefik-kube-system
+    app.kubernetes.io/name: traefik
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: traefik-dashboard-ingress
+  namespace: kube-system
+  annotations:
+    spec.ingressClassName: traefik
+spec:
+  rules:
+    - host: traefik.k3s.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: traefik-dashboard
+                port:
+                  number: 9000

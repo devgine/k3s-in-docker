@@ -1,0 +1,13 @@
+service:
+  type: ClusterIP
+image:
+  tag: 2.21.4
+ingress:
+  enabled: true
+  ingressClassName: traefik
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+  hosts:
+    - host: portainer.k3s.localhost
+      paths:
+        - path: /
