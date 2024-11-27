@@ -1,0 +1,15 @@
+---
+apiVersion: secrets.hashicorp.com/v1beta1
+kind: VaultAuth
+metadata:
+  name: static-auth
+  namespace: my-ns
+spec:
+  method: kubernetes
+  mount: k3s
+  kubernetes:
+    role: demo # replace with the dedicated vault role
+    serviceAccount: vault-account
+    audiences:
+      - vault
+#  vaultConnectionRef: vault-connection

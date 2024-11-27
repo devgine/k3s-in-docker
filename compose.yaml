@@ -92,6 +92,8 @@ services:
     container_name: ${PROJECT_NAME}_k8s
     restart: always
     network_mode: host
+    depends_on:
+      - master
     build:
       context: .
       args:

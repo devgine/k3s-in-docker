@@ -1,0 +1,32 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+  namespace: webapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+        - name: my-app-container
+          image: alpine
+          env:
+            - name: USERNAME_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: secretkv
+                  key: username
+            - name: PASSWORD_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: secretkv
+                  key: password
+          command: ["/bin/sleep"]
+          args: ["infinity"]
