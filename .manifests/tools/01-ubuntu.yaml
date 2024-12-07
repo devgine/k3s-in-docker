@@ -1,0 +1,29 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ubuntu
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-ubuntu-app
+  namespace: ubuntu
+spec:
+  selector:
+    matchLabels:
+      name: test-ubuntu-backend
+  template:
+    metadata:
+      labels:
+        name: test-ubuntu-backend
+    spec:
+      containers:
+        - name: backend
+          image: docker.io/ubuntu
+          imagePullPolicy: Always
+          command:
+            - tail
+            - -f
+            - dev/null

@@ -13,11 +13,11 @@ This repository helps you deploy a kubernetes cluster locally using [k3s](https:
 
 ### Install traefik
 
-First, install traefik stack from this repository https://bitbucket.org/op-connect/traefik
+First, install traefik stack from this repository https://github.com/devgine/stack
 
 ### Clone the project
 ```shell
-git clone git@bitbucket.org:op-connect/k3s.git
+git clone git@github.com:devgine/k3s-traefik.git
 ```
 
 ### Run containers
@@ -45,10 +45,29 @@ kubectl apply -f 00-nginx.yaml
 ```
 Visit http://nginx.k3s.localhost
 
+## Routing
+Router >> *.k3s.localhost >> Docker Traefik >> K3S Traefik >> Service
+
+## K3S config directories
+
+| Node   | Directory                             | Description                                                                                                                                                    |
+|--------|---------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Server | /output                               | k3s will generate a kubeconfig.yaml in this directory.                                                                                                         |
+| Server | /var/lib/rancher/k3s/server/manifests | This directory is where you put all the (yaml) configuration files of the Kubernetes resources.                                                                |
+| Agent  | /var/lib/rancher/k3s/agent/images     | this is where you would place an alternative traefik image (saved as a .tar file with'docker save'), if you want to use it, instead of the traefik:v3.1 image. |
+
 ## References
+https://github.com/its-knowledge-sharing/K3S-Demo/blob/production/docker-compose.yaml<br>
 https://docs.k3s.io/cli/server<br>
 https://thenets.org/how-to-create-a-k3s-cluster-with-nginx-ingress-controller/<br>
 https://blog.stephane-robert.info/post/homelab-ingress-k3s-certificats-self-signed/
+
+### Addons
+https://github.com/its-knowledge-sharing/K3S-Demo-Addons
+
+### Custom coredns
+https://github.com/owncloud/docs-ocis/issues/716
+https://learn.microsoft.com/en-us/azure/aks/coredns-custom#hosts-plugin
 
 ## ISSUES
 https://github.com/k3s-io/k3s/issues/11165<br>

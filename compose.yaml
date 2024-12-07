@@ -1,18 +1,13 @@
 services:
   master:
     container_name: ${CLUSTER_NAME}_master
-    restart: always
+    image: rancher/k3s:${K3S_VERSION:-latest}
     hostname: ${CLUSTER_NAME}-master-1
+    restart: always
     privileged: true
     tmpfs:
       - /run
       - /var/run
-    ulimits:
-      nproc: 65535
-      nofile:
-        soft: 65535
-        hard: 65535
-    image: rancher/k3s:${K3S_VERSION:-latest}
     labels:
       - traefik.enable=true
       - traefik.docker.network=traefik-network
@@ -20,7 +15,7 @@ services:
       - traefik.http.routers.${CLUSTER_NAME}-ingress-controller-https.tls=true
       - traefik.http.routers.${CLUSTER_NAME}-ingress-controller-https.entrypoints=websecure
       - traefik.http.routers.${CLUSTER_NAME}-ingress-controller-https.rule=HostRegexp(`[a-z-_0-9]+.${CLUSTER_DOMAIN}`)
-      - traefik.http.routers.${CLUSTER_NAME}-ingress-controller-https.service=${CLUSTER_NAME}-ingress-controller-loadbalancer
+#      - traefik.http.routers.${CLUSTER_NAME}-ingress-controller-https.service=${CLUSTER_NAME}-ingress-controller-loadbalancer
       - traefik.http.services.${CLUSTER_NAME}-ingress-controller-loadbalancer.loadbalancer.server.port=80
       # Kubernetes API Server port 6443
 #      - traefik.http.routers.${CLUSTER_NAME}-api-server-https.tls=true
@@ -31,22 +26,12 @@ services:
 #      - traefik.http.services.${CLUSTER_NAME}-api-server-loadbalancer.loadbalancer.server.scheme=https
     command:
       - server
-#      - --tls-san
-#      - ${CLUSTER_API_SERVER}
-#      - --cluster-domain
-#      - ${API_SERVER_HOST}
     environment:
       - K3S_TOKEN=${K3S_CLUSTER_SECRET:?err}
       - K3S_KUBECONFIG_OUTPUT=/output/kubeconfig.yaml
       - K3S_KUBECONFIG_MODE=644
     volumes:
-      - k3s-server:/var/lib/rancher/k3s
-      # k3s will generate a kubeconfig.yaml in this directory. This volume is mounted
-      # on your host, so you can then 'export KUBECONFIG=/somewhere/on/your/host/out/kubeconfig.yaml',
-      # in order for your kubectl commands to work.
-      # - ./.kubeconfig/k3s:/output
-      # This directory is where you put all the (yaml) configuration files of
-      # the Kubernetes resources. /var/lib/rancher/k3s/server/manifests/
+      - k3s-master:/var/lib/rancher/k3s
       - ./.manifests/config/traefik.yaml:/var/lib/rancher/k3s/server/manifests/traefik-config.yaml
       - ./.manifests/tools:/var/manifests
     ports:
@@ -56,6 +41,10 @@ services:
     networks:
       - traefik-network
       - internal
+    logging:
+      driver: "json-file"
+      options:
+        tag: "{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}"
 
   worker:
     container_name: ${CLUSTER_NAME}_worker
@@ -68,11 +57,6 @@ services:
     tmpfs:
       - /run
       - /var/run
-    ulimits:
-      nproc: 65535
-      nofile:
-        soft: 65535
-        hard: 65535
     labels:
       - traefik.enable=false
     links:
@@ -81,12 +65,13 @@ services:
       - K3S_URL=https://master:6443
       - K3S_TOKEN=${K3S_CLUSTER_SECRET:?err}
     volumes:
-      - k3s-agent:/etc/rancher/node
-      # this is where you would place an alternative traefik image (saved as a .tar file with
-      # 'docker save'), if you want to use it, instead of the traefik:v3.1 image.
-      # - /somewhere/on/your/host/custom-image:/var/lib/rancher/k3s/agent/images
+      - k3s-worker:/etc/rancher/node
     networks:
       - internal
+    logging:
+      driver: "json-file"
+      options:
+        tag: "{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}"
 
   k8s:
     container_name: ${PROJECT_NAME}_k8s
@@ -104,8 +89,8 @@ services:
       - ./.manifests/tools:${WORKING_DIR}
 
 volumes:
-  k3s-server:
-  k3s-agent:
+  k3s-master:
+  k3s-worker:
 
 networks:
   internal:

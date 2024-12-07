@@ -9,6 +9,7 @@ spec:
       - "--serversTransport.insecureSkipVerify=true"
       - "--api"
       - "--api.insecure=true"
+      - --providers.docker=true
     providers:
       kubernetesCRD:
         allowCrossNamespace: true
