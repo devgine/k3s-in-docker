@@ -56,6 +56,10 @@ Router >> *.k3s.localhost >> Docker Traefik >> K3S Traefik >> Service
 | Server | /var/lib/rancher/k3s/server/manifests | This directory is where you put all the (yaml) configuration files of the Kubernetes resources.                                                                |
 | Agent  | /var/lib/rancher/k3s/agent/images     | this is where you would place an alternative traefik image (saved as a .tar file with'docker save'), if you want to use it, instead of the traefik:v3.1 image. |
 
+## Available apps
+* [Install Portainer](.manifests/tools/helm/portainer/README.md)
+* [Install Vault](.manifests/tools/helm/vault/README.md)
+
 ## References
 https://github.com/its-knowledge-sharing/K3S-Demo/blob/production/docker-compose.yaml<br>
 https://docs.k3s.io/cli/server<br>

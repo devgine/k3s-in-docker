@@ -4,6 +4,18 @@ kind: ServiceAccount
 metadata:
   name: vault-account
   namespace: vault-app
+secrets:
+  - name: vault-auth-service-account-token
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: vault-auth-service-account-token
+  namespace: vault-app
+  annotations:
+    kubernetes.io/service-account.name: vault-account
+type: kubernetes.io/service-account-token
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1

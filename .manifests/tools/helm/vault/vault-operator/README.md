@@ -78,8 +78,9 @@ kubectl exec vault-0 -n vault -- \
 
 #### Configure the Kubernetes authentication
 ```shell
-kubectl exec vault-0 -n vault -- \
-  vault write auth/k3s/config kubernetes_host=https://$KUBERNETES_PORT_443_TCP_ADDR:443
+kubectl exec -ti vault-0 -n vault -- sh
+vault write auth/k3s/config kubernetes_host=https://$KUBERNETES_PORT_443_TCP_ADDR:443
+exit
 ```
 
 ### Create policy
