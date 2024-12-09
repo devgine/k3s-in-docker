@@ -17,7 +17,7 @@ helm upgrade -i --create-namespace -n external-secrets external-secrets external
 ### Create Vault auth token
 This token will be needed to communicate with vault by API from distant client
 ```shell
-kubectl exec --stdin=true vault-0 -n vault -- vault policy write auth-token - <<EOF
+kubectl exec vault-0 -n vault -- vault policy write auth-token - <<EOF
 path "*" {
   capabilities = ["list", "read"]
 }
@@ -26,7 +26,7 @@ EOF
 > You may replace `*` by your secrets path
 
 ```shell
-kubectl exec --stdin=true vault-0 -n vault -- vault token create -policy=auth-token -format=json > helm/vault/token.json
+kubectl exec -n vault -- vault token create -policy=auth-token -format=json > helm/vault/token.json
 ```
 
 ## Create a Cluster Secret Store
@@ -57,7 +57,7 @@ kubectl exec vault-0 -n vault -- \
 ```
 ### Create k3s policy
 ```shell
-kubectl exec --stdin=true vault-0 -n vault -- vault policy write k3s-policy - <<EOF
+kubectl exec vault-0 -n vault -- vault policy write k3s-policy - <<EOF
 path "*" {
   capabilities = ["list", "read"]
 }

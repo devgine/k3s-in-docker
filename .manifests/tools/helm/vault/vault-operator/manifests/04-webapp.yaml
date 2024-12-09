@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: my-app
-  namespace: webapp
+  namespace: vault-app
 spec:
   replicas: 1
   selector:
@@ -21,12 +21,12 @@ spec:
             - name: USERNAME_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: secretkv
+                  name: vault-secrets-operator-kubernetes
                   key: username
             - name: PASSWORD_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: secretkv
+                  name: vault-secrets-operator-kubernetes
                   key: password
           command: ["/bin/sleep"]
           args: ["infinity"]

@@ -2,6 +2,7 @@
 
 ## About
 This repository helps you deploy a kubernetes cluster locally using [k3s](https://docs.k3s.io/)
+Also it contains a container 
 
 ## Requirements
 * git
@@ -13,7 +14,7 @@ This repository helps you deploy a kubernetes cluster locally using [k3s](https:
 
 ### Install traefik
 
-First, install traefik stack from this repository https://github.com/devgine/stack
+First, install traefik stack from this repository https://github.com/devgine/traefik
 
 ### Clone the project
 ```shell
@@ -32,21 +33,36 @@ Enjoy ! 🥳
 > https://traefik.k3s.localhost/
 
 ## K8S tools
-To install kubernetes resources in the cluster, you can connect to the k8s container and run kubectl or helm commands.
+To manage kubernetes resources in the cluster, you can connect to the k8s container and run kubectl or helm commands.<br>
+This container contains the necessary tools to manage kubernetes cluster.
 
 ```shell
 make shell
 ```
-This container is configured to consume the installed k3s cluster's kubernetes API server.
 
-Below is an example to install nginx.
+Below is an example to install nginx. You should run it inside the k8s container.
 ```shell
 kubectl apply -f 00-nginx.yaml
 ```
 Visit http://nginx.k3s.localhost
 
+## Ingress nginx controller
+By default, traefik is installed as an ingress reverse proxy, if you want to allow ingress nginx follow the following instructions
+
+Create namespace
+```shell
+kubectl create ns ingress-nginx
+```
+Add the helm ingress repository
+```shell
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+```
+Install nginx ingress controller
+```shell
+helm install ingress-nginx ingress-nginx/ingress-nginx -f values.yml -n ingress-nginx
+```
 ## Routing
-Router >> *.k3s.localhost >> Docker Traefik >> K3S Traefik >> Service
+Router >> *.k3s.localhost >> Docker Traefik >> K3S container >> Ingress (traefik OR nginx) >> Service
 
 ## K3S config directories
 

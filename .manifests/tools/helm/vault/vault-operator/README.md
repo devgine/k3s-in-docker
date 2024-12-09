@@ -1,91 +1,24 @@
-# Vault secret management
+# Vault operator
 
-## Install helm chart
-
-```shell
-make shell
-```
-```shell
-helm repo add hashicorp https://helm.releases.hashicorp.com
-helm repo update
-```
-
-```shell
-helm upgrade --install vault hashicorp/vault -n vault --create-namespace -f helm/vault/vault-values.yaml
-```
-
-## Initialize vault
-```shell
-kubectl exec vault-0 -n vault -- vault operator init -key-shares=1 -key-threshold=1 -format=json > helm/vault/cluster-keys.json
-```
-> Vault keys will be stored in the file `helm/vault/cluster-keys.json`
-
-## Unseal Vault running
-
-Retrieve unseal key from `helm/vault/cluster-keys.json` and store it in `VAULT_UNSEAL_KEY` environment variable
-```shell
-export VAULT_UNSEAL_KEY=$(jq -r ".unseal_keys_b64[]" helm/vault/cluster-keys.json)
-```
-
-### Unseal a non replicated Vault
-```shell
-kubectl exec vault-0 -n vault -- vault operator unseal $VAULT_UNSEAL_KEY
-```
-
-### Unseal replicated vault
-This step is for a replicated vault only, otherwise skip it
-```shell
-kubectl exec vault-0 -n vault -- vault operator unseal $VAULT_UNSEAL_KEY
-kubectl exec vault-1 -n vault -- vault operator raft join http://vault-0.vault-internal:8200
-kubectl exec vault-1 -n vault -- vault operator unseal $VAULT_UNSEAL_KEY
-kubectl exec vault-2 -n vault -- vault operator raft join http://vault-0.vault-internal:8200
-kubectl exec vault-2 -n vault -- vault operator unseal $VAULT_UNSEAL_KEY
-
-kubectl exec vault-0 -- vault operator unseal "$VAULT_UNSEAL_KEY" -n vault
-kubectl exec vault-1 -- vault operator unseal "$VAULT_UNSEAL_KEY" -n vault
-kubectl exec vault-2 -- vault operator unseal "$VAULT_UNSEAL_KEY" -n vault
-```
-
-## Vault login
-After vault unseal, you must open the connexion with vault to be able to configure it
-
-Retrieve root token from `helm/vault/cluster-keys.json` and store it in `VAULT_ROOT_TOKEN` environment variable
-```shell
-export VAULT_ROOT_TOKEN=$(jq -r ".root_token" helm/vault/cluster-keys.json)
-```
-Vault login
-```shell
-kubectl exec vault-0 -n vault -- vault login -no-print $VAULT_ROOT_TOKEN
-```
-
-## Configure vault
-
-### Create new secrets path
-#### Enable kv-v2 secrets at the path secrets.
-```shell
-# replace PUT_YOUR_SECRET_PATH by your secret path name to create (exp: -path=mysecrets)
-kubectl exec vault-0 -n vault -- vault secrets enable -path=PUT_YOUR_SECRET_PATH kv-v2
-```
-
-### Kubernetes authentication
+## Kubernetes authentication
 Configure the Kubernetes authentication method to use the location of the Kubernetes API.
 
-#### Enable the Kubernetes auth method
+### Enable the Kubernetes auth method
 ```shell
 kubectl exec vault-0 -n vault -- \
-  vault auth enable -path k3s kubernetes
+  vault auth enable -path local kubernetes
 ```
 
-#### Configure the Kubernetes authentication
+### Configure the Kubernetes authentication
 ```shell
 kubectl exec -ti vault-0 -n vault -- sh
-vault write auth/k3s/config kubernetes_host=https://$KUBERNETES_PORT_443_TCP_ADDR:443
+vault write auth/local/config kubernetes_host=https://$KUBERNETES_PORT_443_TCP_ADDR:443
 exit
 ```
 
-### Create policy
+## Create policy
 ```shell
-kubectl exec vault-0 -n vault -- vault policy write secrets-policy - <<EOF
+kubectl exec vault-0 -n vault -- vault policy write local-policy - <<EOF
 path "secrets/data/preprod" {
   capabilities = ["list", "read"]
 }
@@ -95,66 +28,51 @@ path "secrets/metadata/preprod" {
 EOF
 ```
 
-### Create role
+## Create role
 ```shell
 kubectl exec vault-0 -n vault -- \
-  vault write auth/k3s/role/demo \
-    bound_service_account_names=vault-account \
-    bound_service_account_namespaces=my-ns \
-    policies=k3s-policy \
+  vault write auth/local/role/demo \
+    bound_service_account_names=vault-operator-account \
+    bound_service_account_namespaces=vault-app \
+    policies=local-policy \
     audience=vault \
     ttl=24h
 ```
 
-### Create a secret
-In this example
-* secrets is the namespace
-* webapp is the project name
-* config is the env name
-* username and password are the environment variables
-```shell
-kubectl exec vault-0 -n vault -- \
-  vault kv put secrets/webapp/config username="static-user" password="static-password"
-
-# Display secrets (optional)
-kubectl exec vault-0 -n vault -- \
-  vault kv get secrets/webapp/config
-```
-
-## UI Access
-
-https://vault.k3s.localhost/
-
 ## Vault Secret Operator
 ### Install
 ```shell
-helm upgrade --install vault-secrets-operator hashicorp/vault-secrets-operator -f vault/vault-operator-values.yaml -n vault-secrets-operator-system --create-namespace
+helm upgrade --install vault-secrets-operator hashicorp/vault-secrets-operator -f helm/vault/vault-operator/vault-operator-values.yaml -n vault-secrets-operator --create-namespace
 ```
 
-### Deploy and sync a secret
-#### Create namespace
+## Deploy and sync a secret
+### Create namespace
 ```shell
-kubectl create namespace my-ns
+kubectl create namespace vault-app
 ```
-#### Create cluster role binding
+### Create cluster role binding
 ```shell
-kubectl apply -f vault/manifests/00-cluster-binding.yaml
-```
-
-#### Set up Kubernetes authentication
-```shell
-kubectl apply -f vault/manifests/01-vault-connexion.yaml
-kubectl apply -f vault/manifests/02-vault-auth.yaml
-```
-#### Create the secret
-```shell
-kubectl apply -f vault/manifests/03-vault-static-secret.yaml
+kubectl apply -f helm/vault/vault-operator/manifests/00-role-binding.yaml
 ```
 
-### Launch a web application
+### Set up Kubernetes authentication
+```shell
+kubectl apply -f helm/vault/vault-operator/manifests/01-vault-connexion.yaml
+kubectl apply -f helm/vault/vault-operator/manifests/02-vault-auth.yaml
+```
+### Create the secret
+```shell
+kubectl apply -f helm/vault/vault-operator/manifests/03-vault-static-secret.yaml
+```
+Check if the secret is created
+```shell
+kubectl describe secrets vault-secrets-operator-kubernetes -n vault-app
+```
+
+## Launch a web application
 
 ```shell
-kubectl apply -f vault/04-webapp.yaml
+kubectl apply -f helm/vault/vault-operator/04-webapp.yaml
 ```
 To be sure the secrets are successfully synchronized, connect to alpine container and execute `printenv`.
 You should show your secrets displayed.

@@ -83,8 +83,7 @@ EOF
 ### Create a secret
 In this example
 * secrets is the namespace
-* webapp is the project name
-* config is the env name
+* preprod is the env name
 * username and password are the environment variables
 ```shell
 kubectl exec vault-0 -n vault -- \
