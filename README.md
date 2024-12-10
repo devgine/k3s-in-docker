@@ -13,12 +13,13 @@ Also it contains all useful utils to manage kubernetes cluster like `kubectl`, `
 ## How to
 
 ### Install traefik
+> If you already have an installed traefik you can skip this step
 
 First, install traefik stack from this repository https://github.com/devgine/traefik
 
 ### Clone the project
 ```shell
-git clone git@github.com:devgine/k3s-traefik.git
+git clone git@github.com:devgine/k3s-in-docker.git
 ```
 
 ### Run containers
@@ -49,17 +50,21 @@ Visit http://nginx.k3s.localhost
 ## Ingress nginx controller
 By default, traefik is installed as an ingress reverse proxy, if you want to allow ingress nginx follow the following instructions
 
-Create namespace
+### Connect to k8s container
+```shell
+make shell
+```
+### Create namespace
 ```shell
 kubectl create ns ingress-nginx
 ```
-Add the helm ingress repository
+### Add the helm ingress repository
 ```shell
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 ```
-Install nginx ingress controller
+### Install nginx ingress controller
 ```shell
-helm install ingress-nginx ingress-nginx/ingress-nginx -f values.yml -n ingress-nginx
+helm install ingress-nginx ingress-nginx/ingress-nginx -n ingress-nginx
 ```
 ## Routing
 Router >> *.k3s.localhost >> Docker Traefik >> K3S container >> Ingress (traefik OR nginx) >> Service
