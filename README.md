@@ -1,8 +1,8 @@
 # k3s cluster
 
 ## About
-This repository helps you deploy a kubernetes cluster locally using [k3s](https://docs.k3s.io/)
-Also it contains a container 
+This repository helps you create a kubernetes cluster locally with [k3s](https://docs.k3s.io/) using `Docker` and `traefik`.<br>
+Also it contains all useful utils to manage kubernetes cluster like `kubectl`, `helm` and more
 
 ## Requirements
 * git
@@ -86,7 +86,7 @@ https://blog.stephane-robert.info/post/homelab-ingress-k3s-certificats-self-sign
 https://github.com/its-knowledge-sharing/K3S-Demo-Addons
 
 ### Custom coredns
-https://github.com/owncloud/docs-ocis/issues/716
+https://github.com/owncloud/docs-ocis/issues/716<br>
 https://learn.microsoft.com/en-us/azure/aks/coredns-custom#hosts-plugin
 
 ## ISSUES
